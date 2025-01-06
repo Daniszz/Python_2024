@@ -1,6 +1,6 @@
 import os
 import shutil
-import glob
+import winreg
 
 
 def listare_director(directory):
@@ -106,6 +106,76 @@ def mutare(source, destination):
     except Exception as e:
         print(f"Eroare neasteptata: {e}")
 
+
+def listare_key(input_key):
+    try:
+        predef, subkey = input_key.split('\\', 1) if '\\' in input_key else (input_key, "")
+        hkey = getattr(winreg, predef.upper(), None)
+        
+        if not hkey:
+            print(f"Eroare: Cheia predefinita '{predef}' este invalida.")
+            return
+        
+        with winreg.OpenKey(hkey, subkey) as key:
+            i = 0
+            print(f"Continutul cheii '{input_key}':")
+            while True:
+                try:
+                    subkey_name = winreg.EnumKey(key, i)
+                    print(f"{input_key}\\{subkey_name}")
+                    i += 1
+                except OSError:
+                    break
+    except Exception as e:
+        print(f"Eroare neasteptata: {e}")
+
+def creare_key(input_key):
+    try:
+        predef, subkey = input_key.split('\\', 1) if '\\' in input_key else (input_key, "")
+        hkey = getattr(winreg, predef.upper(), None)
+        
+        if not hkey:
+            print(f"Eroare: Cheia predefinita '{predef}' este invalida.")
+            return
+        
+        with winreg.CreateKey(hkey, subkey) as key:
+            print(f"Cheia '{input_key}' a fost creata cu succes.")
+    except Exception as e:
+        print(f"Eroare neasteptata: {e}")
+
+def modificare_key(input_key, value_name, data):
+    try:
+        predef, subkey = input_key.split('\\', 1) if '\\' in input_key else (input_key, "")
+        hkey = getattr(winreg, predef.upper(), None)
+        
+        if not hkey:
+            print(f"Eroare: Cheia predefinita '{predef}' este invalida.")
+            return
+        
+        with winreg.CreateKey(hkey, subkey) as key:
+            winreg.SetValueEx(key, value_name, 0, winreg.REG_SZ, data)
+            print(f"Valoarea '{value_name}' a fost adaugata cu succes in '{input_key}'.")
+    except Exception as e:
+        print(f"Eroare neasteptata: {e}")
+
+def sterge_key(input_key: str):
+    try:
+        predef, subkey = input_key.split('\\', 1) if '\\' in input_key else (input_key, "")
+        hkey = getattr(winreg, predef.upper(), None)
+        
+        if not hkey:
+            print(f"Eroare: Cheia predefinita '{predef}' este invalida.")
+            return
+        
+        winreg.DeleteKey(hkey, subkey)
+        print(f"Cheia '{input_key}' a fost stearsa cu succes.")
+    except FileNotFoundError:
+        print(f"Eroare: Cheia '{input_key}' nu a fost gasita.")
+    except PermissionError:
+        print(f"Eroare: Nu aveti permisiunea de a sterge cheia '{input_key}'.")
+    except Exception as e:
+        print(f"Eroare neasteptata: {e}")
+
 def print_help():
     print("Comenzi disponibile:")
     print("  dir <director> - Afiseaza fisierele/directoarele dintr-un director")
@@ -113,7 +183,12 @@ def print_help():
     print("  copy <sursa> <destinatie> - Copie un fisier (poate redenumi fisierul la destinatie)")
     print("  xcopy <sursa> <destinatie> - Copie un director recursiv")
     print("  rmdir <director> [/s] [/q] - Sterge recursiv un director. /s pentru stergere recursiva, /q pentru mod silentios")
-    print("  move <sursa> <destinatie> - Muta un fisier sau un director")        
+    print("  move <sursa> <destinatie> - Muta un fisier sau un director") 
+    print("  reg query <cheie> - Afiseaza lista cheilor de registru.")
+    print("  reg add <cheie> - Adauga o noua cheie de registru.")
+    print("  reg add <cheie> /v <valoare> /d <data> - Modifica o cheie de registru")
+    print("  reg delete <cheie> /v <valoare> /d <data> - Modifica o cheie de registru")
+
     print("  help - Afiseaza acest mesaj de ajutor")
     print("  quit - Inchide programul")
 
@@ -169,7 +244,24 @@ def main():
                         mutare(argument[1],argument[2])
                    else: 
                         print("Argumente insuficiente. Utilizeaza help pentru ajutor.")
-    
+
+            elif argument[0] == "reg":
+                if len(argument) == 3:
+                    if argument[1] == "query":
+                        listare_key(argument[2])
+                    elif argument[1] == "add":
+                        creare_key(argument[2])
+                    elif argument[1] == "delete": 
+                        sterge_key(argument[2])   
+                    else:
+                        print("Argumente insuficiente. Utilizeaza 'help' pentru ajutor.")
+                elif len(argument) == 7 and argument[1] == "add" and argument[3] == "/v" and argument[5] == "/d":
+                    modificare_key(argument[2], argument[4], argument[6])
+                else:
+                    print("Argumente insuficiente sau incorecte. Utilizeaza 'help' pentru ajutor.") 
+
+            
+
             elif argument[0] == "help":
                 print_help()
 
