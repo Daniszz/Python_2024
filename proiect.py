@@ -87,16 +87,35 @@ def sterge_director(directory, silent=False, recursive=False):
     except Exception as e:
         print(f"Eroare neasteptata: {e}")
 
+def mutare(source, destination):
+    try:
+        if not os.path.exists(source):
+            print(f"Eroare: Sursa '{source}' nu a fost gasita.")
+            return
+        
+        if os.path.isfile(source):
+            copiere_fisier(source, destination)
+            sterge_fisier(source)
+        elif os.path.isdir(source):
+            copiere_director(source, destination)
+            sterge_director(source,silent=1,recursive=1)
+        else:
+            print(f"Eroare: '{source}' nu este nici fisier, nici director.")
+    except PermissionError:
+        print(f"Eroare: Nu aveti permisiunea de a muta '{source}' in '{destination}'.")
+    except Exception as e:
+        print(f"Eroare neasteptata: {e}")
 
 def print_help():
     print("Comenzi disponibile:")
     print("  dir <director> - Afiseaza fisierele/directoarele dintr-un director")
-    print("  del <pattern> - sterge fisiere")
+    print("  del <pattern> - Sterge fisiere")
     print("  copy <sursa> <destinatie> - Copie un fisier (poate redenumi fisierul la destinatie)")
     print("  xcopy <sursa> <destinatie> - Copie un director recursiv")
-    print("  rmdir <director> [/s] [/q] - sterge recursiv un director. /s pentru stergere recursiva, /q pentru mod silentios")
+    print("  rmdir <director> [/s] [/q] - Sterge recursiv un director. /s pentru stergere recursiva, /q pentru mod silentios")
+    print("  move <sursa> <destinatie> - Muta un fisier sau un director")        
     print("  help - Afiseaza acest mesaj de ajutor")
-    print("  quit - inchide programul")
+    print("  quit - Inchide programul")
 
 
 def main():
@@ -145,7 +164,12 @@ def main():
                      else:
                         print("Argumente insuficiente sau nevalide. Utilizeaza help pentru ajutor.")
 
-
+            elif argument[0] == "move":
+                   if len(argument) == 3:
+                        mutare(argument[1],argument[2])
+                   else: 
+                        print("Argumente insuficiente. Utilizeaza help pentru ajutor.")
+    
             elif argument[0] == "help":
                 print_help()
 
