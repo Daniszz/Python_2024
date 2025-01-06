@@ -1,7 +1,7 @@
 import os
 import shutil
 import winreg
-
+import subprocess
 
 def listare_director(directory):
     try:
@@ -176,6 +176,33 @@ def sterge_key(input_key: str):
     except Exception as e:
         print(f"Eroare neasteptata: {e}")
 
+def listare_procese():
+    try:
+        iesire = subprocess.run(
+            ["tasklist"], capture_output=True, text=True, check=True
+        )
+        print(iesire.stdout)  
+    except subprocess.CalledProcessError:
+        print("Eroare la listarea proceselor")
+
+def incheiere_proces_pid(pid):
+    try:
+        iesire = subprocess.run(
+            ["taskkill", "/F", "/PID", pid], capture_output=True, text=True, check=True
+        )
+        print(f"Inchiderea s-a realizat cu succes: {pid}")
+    except subprocess.CalledProcessError as e:
+        print(f"Eroare la inchiderea procesului cu PID {pid}: {e.stderr}")
+
+def incheiere_proces_nume(proces_nume):
+    try:
+        iesire = subprocess.run(
+            ["taskkill", "/F", "/IM", proces_nume], capture_output=True, text=True, check=True
+        )
+        print(f"Inchiderea s-a realizat cu succes: {proces_nume}")
+    except subprocess.CalledProcessError as e:
+        print(f"Eroare la inchiderea procesului cu numele {proces_nume}: {e.stderr}")
+
 def print_help():
     print("Comenzi disponibile:")
     print("  dir <director> - Afiseaza fisierele/directoarele dintr-un director")
@@ -183,14 +210,17 @@ def print_help():
     print("  copy <sursa> <destinatie> - Copie un fisier (poate redenumi fisierul la destinatie)")
     print("  xcopy <sursa> <destinatie> - Copie un director recursiv")
     print("  rmdir <director> [/s] [/q] - Sterge recursiv un director. /s pentru stergere recursiva, /q pentru mod silentios")
-    print("  move <sursa> <destinatie> - Muta un fisier sau un director") 
+    print("  move <sursa> <destinatie> - Muta un fisier sau un director")
     print("  reg query <cheie> - Afiseaza lista cheilor de registru.")
     print("  reg add <cheie> - Adauga o noua cheie de registru.")
     print("  reg add <cheie> /v <valoare> /d <data> - Modifica o cheie de registru")
     print("  reg delete <cheie> /v <valoare> /d <data> - Modifica o cheie de registru")
-
+    print("  tasklist - Afiseaza procesele active")
+    print("  taskkill /pid <id_proces> - Omoara un proces cu un id specific.")
+    print("  taskkill /im <nume_proces> - Omoara un proces cu un nume specific.")
     print("  help - Afiseaza acest mesaj de ajutor")
     print("  quit - Inchide programul")
+
 
 
 def main():
@@ -260,7 +290,18 @@ def main():
                 else:
                     print("Argumente insuficiente sau incorecte. Utilizeaza 'help' pentru ajutor.") 
 
-            
+            elif argument[0] == "tasklist":
+                    listare_procese()
+              
+            elif argument[0] == "taskkill":
+                if len(argument)==3:
+                    if argument[1]=="/im":
+                        incheiere_proces_nume(argument[2])
+                    elif argument[1]=="/pid":
+                        incheiere_proces_pid(argument[2])
+                    else:      
+                        print("Argumente insuficiente sau incorecte. Utilizeaza 'help' pentru ajutor.") 
+    
 
             elif argument[0] == "help":
                 print_help()
